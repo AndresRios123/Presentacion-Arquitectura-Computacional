@@ -458,7 +458,7 @@
     <section id="resultados" class="animate-on-scroll">
         <div class="section-label">04 / Resultados</div>
         <h2 class="section-title">Métricas de Rendimiento</h2>
-        <p style="color:var(--text-secondary);max-width:700px;">Datos reales medidos en 6 dispositivos: 3 PCs (CISC) y 3 móviles (RISC). Estado inicial, carga máxima (1000 bloques), eliminación y Garbage Collection.</p>
+        <p style="color:var(--text-secondary);max-width:700px;">Datos reales medidos en 6 dispositivos: <strong style="color:var(--text-primary);">Compumax</strong> (Ryzen 7 5700U), <strong style="color:var(--text-primary);">Mesa</strong> (Ryzen 7 5800X), <strong style="color:var(--text-primary);">HP Laptop</strong> (Ryzen 5 5500U) · CISC. Y <strong style="color:var(--text-primary);">Moto G60s</strong> (Helio G95), <strong style="color:var(--text-primary);">iPhone 12 Mini</strong> (A14 Bionic), <strong style="color:var(--text-primary);">Oppo A78</strong> (680 Octa-Core) · RISC. Estado inicial, carga máxima (1000 bloques), eliminación y Garbage Collection.</p>
         <div class="results-grid">
             <div class="chart-card full-width">
                 <div class="chart-header">
@@ -847,7 +847,7 @@
     new Chart(fpsCtx, {
         type: 'bar',
         data: {
-            labels: ['PC1 Inicial', 'PC1 Carga', 'PC2 Inicial', 'PC2 Carga', 'PC3 Inicial', 'PC3 Carga', 'Movil1 Inicial', 'Movil1 Carga', 'Movil2 Inicial', 'Movil2 Carga', 'Movil3 Inicial', 'Movil3 Carga'],
+            labels: ['Compumax Inicial', 'Compumax Carga', 'Mesa Inicial', 'Mesa Carga', 'HP Inicial', 'HP Carga', 'Moto G60s Inicial', 'Moto G60s Carga', 'iPhone 12 Inicial', 'iPhone 12 Carga', 'Oppo A78 Inicial', 'Oppo A78 Carga'],
             datasets: [{
                 label: 'FPS',
                 data: [60, 20, 100, 20, 59, 20, 30, 12, 30, 20, 59, 59],
@@ -874,7 +874,7 @@
     new Chart(heapCtx, {
         type: 'line',
         data: {
-            labels: ['PC1 Ini', 'PC1 Carga', 'PC1 Elim', 'PC2 Ini', 'PC2 Carga', 'PC2 Elim', 'PC3 Ini', 'PC3 Carga', 'PC3 Elim'],
+            labels: ['Compumax Ini', 'Compumax Carga', 'Compumax Elim', 'Mesa Ini', 'Mesa Carga', 'Mesa Elim', 'HP Ini', 'HP Carga', 'HP Elim'],
             datasets: [{
                 label: 'Heap Memory (MB)',
                 data: [40, 80, 50, 38, 100, 60, 37, 83, 60],
@@ -901,7 +901,7 @@
     new Chart(ramCtx, {
         type: 'line',
         data: {
-            labels: ['PC1 Ini', 'PC1 Carga', 'PC1 Elim', 'PC2 Ini', 'PC2 Carga', 'PC2 Elim', 'PC3 Ini', 'PC3 Carga', 'PC3 Elim'],
+            labels: ['Compumax Ini', 'Compumax Carga', 'Compumax Elim', 'Mesa Ini', 'Mesa Carga', 'Mesa Elim', 'HP Ini', 'HP Carga', 'HP Elim'],
             datasets: [{
                 label: 'RAM JS (MB)',
                 data: [50, 76, 55, 37, 90, 40, 38, 90, 60],
