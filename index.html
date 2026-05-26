@@ -1,0 +1,981 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitectura Computacional | Monitoreo en Tiempo Real</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #0f172a;
+            --border-color: rgba(56, 189, 248, 0.15);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --cyan: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, 0.4);
+            --blue: #3b82f6;
+            --blue-glow: rgba(59, 130, 246, 0.4);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.4);
+            --purple: #a855f7;
+            --red: #ef4444;
+            --orange: #f97316;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+        #particles-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.3); border-radius: 4px; }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: rgba(10, 14, 26, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color); padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600;
+            color: var(--cyan); letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
+        }
+        .nav-brand::before {
+            content: ''; width: 8px; height: 8px; background: var(--green);
+            border-radius: 50%; box-shadow: 0 0 10px var(--green-glow); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+            font-weight: 500; transition: color 0.3s; position: relative;
+        }
+        .nav-links a:hover { color: var(--cyan); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+            background: var(--cyan); transition: width 0.3s;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        section { position: relative; z-index: 1; padding: 6rem 2rem; max-width: 1400px; margin: 0 auto; }
+        .section-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--cyan);
+            letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label::before { content: '//'; color: var(--text-muted); }
+        .section-title {
+            font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding-top: 4rem;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.5rem 1.2rem; background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 50px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; color: var(--cyan); margin-bottom: 2rem; backdrop-filter: blur(10px);
+        }
+        .hero-badge .dot {
+            width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+            box-shadow: 0 0 8px var(--green-glow); animation: pulse 2s infinite;
+        }
+        .hero-title {
+            font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #06b6d4 50%, #3b82f6 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: glow-text 3s ease-in-out infinite alternate;
+        }
+        @keyframes glow-text {
+            from { filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.3)); }
+            to { filter: drop-shadow(0 0 40px rgba(6, 182, 212, 0.5)); }
+        }
+        .hero-subtitle {
+            font-size: 1.25rem; color: var(--text-secondary); max-width: 700px;
+            margin-bottom: 3rem; font-weight: 300;
+        }
+        .hero-metrics {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+            width: 100%; max-width: 900px; margin-bottom: 3rem;
+        }
+        .metric-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 1.5rem; backdrop-filter: blur(10px); transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .metric-card:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(6, 182, 212, 0.1); }
+        .metric-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted);
+            margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .metric-value { font-size: 2.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .metric-value.cyan { color: var(--cyan); text-shadow: 0 0 20px var(--cyan-glow); }
+        .metric-value.blue { color: var(--blue); text-shadow: 0 0 20px var(--blue-glow); }
+        .metric-value.green { color: var(--green); text-shadow: 0 0 20px var(--green-glow); }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 8px; padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--cyan), var(--blue)); border: none;
+            border-radius: 12px; color: white; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; text-decoration: none;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3); }
+        .intro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+        .intro-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2rem; backdrop-filter: blur(10px); transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .intro-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .intro-card:hover::before { opacity: 1; }
+        .intro-card:hover { border-color: rgba(6, 182, 212, 0.3); transform: translateY(-5px); }
+        .intro-icon {
+            width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem;
+            background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+        .intro-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .intro-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+        .tech-stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+        .tech-tag {
+            padding: 0.35rem 0.8rem; background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 20px;
+            font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--cyan);
+        }
+        .architecture-flow { display: flex; flex-direction: column; gap: 0; margin-top: 3rem; position: relative; }
+        .arch-step {
+            display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem 2rem;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px;
+            backdrop-filter: blur(10px); transition: all 0.3s; position: relative;
+        }
+        .arch-step:hover { border-color: rgba(6, 182, 212, 0.3); box-shadow: 0 0 30px rgba(6, 182, 212, 0.1); }
+        .arch-arrow { display: flex; justify-content: center; padding: 0.5rem; color: var(--cyan); font-size: 1.5rem; }
+        .arch-icon {
+            width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+        }
+        .arch-icon.react { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .arch-icon.worker { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .arch-icon.prometheus { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
+        .arch-icon.grafana { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .arch-icon.jmeter { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .arch-icon.user { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .arch-content h4 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .arch-content p { font-size: 0.85rem; color: var(--text-secondary); }
+        .method-timeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-top: 3rem; }
+        .method-step {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 1.5rem 1rem; text-align: center; backdrop-filter: blur(10px); transition: all 0.3s;
+        }
+        .method-step:hover { transform: translateY(-5px); border-color: rgba(6, 182, 212, 0.3); }
+        .method-number {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--blue)); display: flex;
+            align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; margin: 0 auto 1rem;
+        }
+        .method-step h4 { font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .method-step p { font-size: 0.75rem; color: var(--text-secondary); }
+        .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
+        .chart-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 1.5rem; backdrop-filter: blur(10px);
+        }
+        .chart-card.full-width { grid-column: 1 / -1; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .chart-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .chart-title-icon { width: 8px; height: 8px; border-radius: 50%; }
+        .chart-container { position: relative; height: 280px; }
+        .chart-container.large { height: 350px; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 3rem; }
+        .comparison-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2rem; backdrop-filter: blur(10px);
+        }
+        .comparison-card.cisc { border-top: 3px solid var(--blue); }
+        .comparison-card.risc { border-top: 3px solid var(--green); }
+        .comparison-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .comparison-badge { padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .comparison-badge.cisc { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .comparison-badge.risc { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .device-list { display: flex; flex-direction: column; gap: 1rem; }
+        .device-item {
+            display: flex; justify-content: space-between; align-items: center; padding: 1rem;
+            background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid var(--glass-border);
+        }
+        .device-name { font-size: 0.9rem; font-weight: 500; }
+        .device-specs { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .workers-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+        .worker-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2rem; backdrop-filter: blur(10px); position: relative; overflow: hidden;
+        }
+        .worker-card.normal { border-top: 3px solid var(--red); }
+        .worker-card.parallel { border-top: 3px solid var(--green); }
+        .worker-visual { display: flex; align-items: center; gap: 1rem; margin: 2rem 0; padding: 1.5rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; }
+        .thread-visual { flex: 1; height: 60px; border-radius: 8px; position: relative; overflow: hidden; }
+        .thread-visual.main { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .thread-visual.worker { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .thread-bar { height: 100%; border-radius: 4px; transition: width 1.5s ease-out; }
+        .thread-bar.main { background: linear-gradient(90deg, var(--red), #f87171); }
+        .thread-bar.worker { background: linear-gradient(90deg, var(--green), #34d399); }
+        .thread-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8rem; font-weight: 600; }
+        .worker-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .worker-metric { text-align: center; padding: 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; }
+        .worker-metric-value { font-size: 1.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .worker-metric-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .grafana-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+        .grafana-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 1.5rem; backdrop-filter: blur(10px); transition: all 0.3s;
+        }
+        .grafana-card:hover { border-color: rgba(168, 85, 247, 0.3); transform: translateY(-5px); }
+        .grafana-value {
+            font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+            margin: 1rem 0; color: var(--purple); text-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+        .grafana-sparkline { height: 60px; margin-top: 1rem; position: relative; }
+        .conclusion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
+        .conclusion-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2rem; backdrop-filter: blur(10px); transition: all 0.3s;
+            border-left: 3px solid var(--cyan);
+        }
+        .conclusion-card:hover { transform: translateX(5px); border-color: rgba(6, 182, 212, 0.3); }
+        .conclusion-card h4 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--text-primary); }
+        .conclusion-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+        .footer {
+            text-align: center; padding: 3rem 2rem; border-top: 1px solid var(--glass-border);
+            color: var(--text-muted); font-size: 0.85rem; position: relative; z-index: 1;
+        }
+        .footer strong { color: var(--cyan); }
+        @media (max-width: 1024px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-metrics { grid-template-columns: 1fr; }
+            .intro-grid { grid-template-columns: 1fr; }
+            .method-timeline { grid-template-columns: repeat(3, 1fr); }
+            .results-grid { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .workers-comparison { grid-template-columns: 1fr; }
+            .grafana-grid { grid-template-columns: 1fr; }
+            .conclusion-grid { grid-template-columns: 1fr; }
+            .arch-step { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 640px) {
+            .hero-title { font-size: 2rem; }
+            .section-title { font-size: 1.75rem; }
+            .method-timeline { grid-template-columns: repeat(2, 1fr); }
+            nav { padding: 1rem; }
+            .nav-links { gap: 1rem; }
+            .nav-links a { font-size: 0.75rem; }
+        }
+        .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: opacity 0.6s, transform 0.6s; }
+        .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <nav>
+        <div class="nav-brand">GameMemoriaVirtual</div>
+        <ul class="nav-links">
+            <li><a href="#intro">Intro</a></li>
+            <li><a href="#arquitectura">Arquitectura</a></li>
+            <li><a href="#resultados">Resultados</a></li>
+            <li><a href="#workers">Workers</a></li>
+            <li><a href="#grafana">Grafana</a></li>
+        </ul>
+    </nav>
+    <section class="hero">
+        <div class="hero-badge"><span class="dot"></span> Sistema en Monitoreo</div>
+        <h1 class="hero-title">Laboratorio de Verificación<br>de Arquitectura Computacional</h1>
+        <p class="hero-subtitle">Monitoreo en tiempo real de rendimiento 3D, comparativa RISC vs CISC, computación paralela con Web Workers y observabilidad con Grafana + Prometheus</p>
+        <div class="hero-metrics">
+            <div class="metric-card">
+                <div class="metric-label">FPS Promedio CISC</div>
+                <div class="metric-value cyan" id="hero-fps">0</div>
+                <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">PC bajo carga</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Uso CPU Web Workers</div>
+                <div class="metric-value blue" id="hero-cpu">0%</div>
+                <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">Reducción del 20%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Heap Memory Pico</div>
+                <div class="metric-value green" id="hero-ram">0</div>
+                <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">MB en carga máxima</div>
+            </div>
+        </div>
+        <a href="#resultados" class="btn-primary">Ver Resultados →</a>
+    </section>
+
+    <section id="intro" class="animate-on-scroll">
+        <div class="section-label">01 / Introduccion</div>
+        <h2 class="section-title">Análisis de rendimiento en aplicaciones 3D web</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Laboratorio práctico que integra conceptos teóricos de arquitectura computacional con experimentación real sobre una aplicación interactiva 3D desarrollada con React y Three.js.</p>
+        <div class="intro-grid">
+            <div class="intro-card">
+                <div class="intro-icon">🎯</div>
+                <h3>Objetivo del Proyecto</h3>
+                <p>Analizar el impacto de arquitecturas RISC vs CISC, tipos de memoria, computación paralela y herramientas de monitoreo sobre el rendimiento de una app 3D interactiva.</p>
+                <div class="tech-stack">
+                    <span class="tech-tag">RISC</span>
+                    <span class="tech-tag">CISC</span>
+                    <span class="tech-tag">3D</span>
+                </div>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">📊</div>
+                <h3>Variables de Estudio</h3>
+                <p>FPS, Heap Memory, RAM JS, uso de CPU, estabilidad del sistema y eficiencia energética bajo diferentes escenarios de carga.</p>
+                <div class="tech-stack">
+                    <span class="tech-tag">FPS</span>
+                    <span class="tech-tag">Heap</span>
+                    <span class="tech-tag">RAM</span>
+                </div>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">🛠️</div>
+                <h3>Stack Tecnológico</h3>
+                <p>React + Three.js para el frontend 3D, Web Workers para paralelismo, Prometheus + Grafana para observabilidad y JMeter para pruebas de carga.</p>
+                <div class="tech-stack">
+                    <span class="tech-tag">React</span>
+                    <span class="tech-tag">Three.js</span>
+                    <span class="tech-tag">Web Workers</span>
+                    <span class="tech-tag">Grafana</span>
+                    <span class="tech-tag">Prometheus</span>
+                    <span class="tech-tag">JMeter</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="arquitectura" class="animate-on-scroll">
+        <div class="section-label">02 / Arquitectura</div>
+        <h2 class="section-title">Arquitectura del Sistema</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Flujo de datos desde el usuario hasta el monitoreo en tiempo real. Stack moderno de observabilidad.</p>
+        <div class="architecture-flow">
+            <div class="arch-step">
+                <div class="arch-icon user">👤</div>
+                <div class="arch-content">
+                    <h4>Usuario</h4>
+                    <p>Interacción con la aplicación 3D</p>
+                </div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step">
+                <div class="arch-icon react">⚛️</div>
+                <div class="arch-content">
+                    <h4>React + Three.js (Vite)</h4>
+                    <p>Entorno 3D interactivo · Renderizado WebGL</p>
+                </div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step">
+                <div class="arch-icon worker">⚙️</div>
+                <div class="arch-content">
+                    <h4>Web Workers</h4>
+                    <p>Computación paralela en segundo plano</p>
+                </div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step">
+                <div class="arch-icon prometheus">📡</div>
+                <div class="arch-content">
+                    <h4>Prometheus + Node Exporter</h4>
+                    <p>Scraping de métricas del sistema operativo</p>
+                </div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step">
+                <div class="arch-icon grafana">📈</div>
+                <div class="arch-content">
+                    <h4>Grafana</h4>
+                    <p>Visualización de dashboards en tiempo real</p>
+                </div>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step">
+                <div class="arch-icon jmeter">🧪</div>
+                <div class="arch-content">
+                    <h4>Apache JMeter</h4>
+                    <p>Pruebas de carga HTTP sobre localhost:5173</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="metodologia" class="animate-on-scroll">
+        <div class="section-label">03 / Metodologia</div>
+        <h2 class="section-title">Flujo del Laboratorio</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Procedimiento sistemático para medir, comparar y monitorear el rendimiento.</p>
+        <div class="method-timeline">
+            <div class="method-step">
+                <div class="method-number">1</div>
+                <h4>Ejecutar Juego</h4>
+                <p>npm run dev · Estado inicial</p>
+            </div>
+            <div class="method-step">
+                <div class="method-number">2</div>
+                <h4>Agregar Bloques</h4>
+                <p>1000 objetos 3D · Carga máxima</p>
+            </div>
+            <div class="method-step">
+                <div class="method-number">3</div>
+                <h4>Medir FPS y Memoria</h4>
+                <p>Heap Memory · RAM JS</p>
+            </div>
+            <div class="method-step">
+                <div class="method-number">4</div>
+                <h4>Ejecutar JMeter</h4>
+                <p>20/40/60 usuarios concurrentes</p>
+            </div>
+            <div class="method-step">
+                <div class="method-number">5</div>
+                <h4>Monitorear Grafana</h4>
+                <p>CPU · RAM · Red · Load</p>
+            </div>
+            <div class="method-step">
+                <div class="method-number">6</div>
+                <h4>Analizar Resultados</h4>
+                <p>RISC vs CISC · Comparativas</p>
+            </div>
+        </div>
+    </section>
+    <section id="resultados" class="animate-on-scroll">
+        <div class="section-label">04 / Resultados</div>
+        <h2 class="section-title">Métricas de Rendimiento</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Datos reales medidos en 6 dispositivos: 3 PCs (CISC) y 3 móviles (RISC). Estado inicial, carga máxima (1000 bloques), eliminación y Garbage Collection.</p>
+        <div class="results-grid">
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <div class="chart-title"><span class="chart-title-icon" style="background:var(--cyan);"></span> FPS por Dispositivo y Escenario</div>
+                </div>
+                <div class="chart-container large">
+                    <canvas id="fpsChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title"><span class="chart-title-icon" style="background:var(--blue);"></span> Heap Memory (MB)</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="heapChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title"><span class="chart-title-icon" style="background:var(--green);"></span> RAM JS (MB)</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ramChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <div class="chart-title"><span class="chart-title-icon" style="background:var(--purple);"></span> RISC vs CISC — FPS Promedio</div>
+                </div>
+                <div class="chart-container large">
+                    <canvas id="riscCiscChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="risc-cisc" class="animate-on-scroll">
+        <div class="section-label">05 / Comparativa</div>
+        <h2 class="section-title">RISC vs CISC</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Comparativa de rendimiento entre arquitecturas. CISC superior en potencia bruta; RISC más eficiente energéticamente.</p>
+        <div class="comparison-grid">
+            <div class="comparison-card cisc">
+                <div class="comparison-header">
+                    <div class="comparison-badge cisc">CISC</div>
+                    <h3 style="font-size:1.25rem;">Computadores</h3>
+                </div>
+                <div class="device-list">
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">PC 1 — Compumax</div>
+                            <div class="device-specs">AMD Ryzen 7 5700U · 16 GB RAM · Win 11</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--blue);">60 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">PC 2 — Mesa</div>
+                            <div class="device-specs">AMD Ryzen 7 5800X · 32 GB RAM · Win 10</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--blue);">100 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">PC 3 — HP Laptop</div>
+                            <div class="device-specs">AMD Ryzen 5 5500U · 16 GB RAM · Win 11</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--blue);">59 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:1.5rem;padding:1rem;background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);">
+                    <div style="font-size:0.85rem;color:var(--text-secondary);">Bajo carga máxima (1000 bloques): FPS caen a <strong style="color:var(--blue);">20 FPS</strong> en todos los PCs. Mayor estabilidad y recuperación rápida post-GC.</div>
+                </div>
+            </div>
+            <div class="comparison-card risc">
+                <div class="comparison-header">
+                    <div class="comparison-badge risc">RISC</div>
+                    <h3 style="font-size:1.25rem;">Móviles</h3>
+                </div>
+                <div class="device-list">
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">Móvil 1 — Moto G60s</div>
+                            <div class="device-specs">MediaTek Helio G95 · 6 GB RAM · Android 12</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--green);">30 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">Móvil 2 — iPhone 12 Mini</div>
+                            <div class="device-specs">Apple A14 Bionic · 4 GB RAM · iOS 16</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--green);">30 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                    <div class="device-item">
+                        <div>
+                            <div class="device-name">Móvil 3 — Oppo A78</div>
+                            <div class="device-specs">680 Octa-Core · 8 GB RAM · Android 12</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--green);">59 FPS</div>
+                            <div class="device-specs">Estado inicial</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:1.5rem;padding:1rem;background:rgba(16,185,129,0.05);border-radius:12px;border:1px solid rgba(16,185,129,0.2);">
+                    <div style="font-size:0.85rem;color:var(--text-secondary);">Bajo carga: caída pronunciada. iPhone 12 Mini mejor estabilidad (optimización A14). Oppo A78 destaca con 8 GB RAM. <strong style="color:var(--green);">Mejor eficiencia energética</strong>.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="workers" class="animate-on-scroll">
+        <div class="section-label">06 / Web Workers</div>
+        <h2 class="section-title">Computación Paralela</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Comparativa de rendimiento: ejecución normal (Main Thread) vs paralela (Web Workers).</p>
+        <div class="workers-comparison">
+            <div class="worker-card normal">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h3 style="font-size:1.25rem;">Normal</h3>
+                    <span style="padding:0.25rem 0.75rem;background:rgba(239,68,68,0.15);color:var(--red);border-radius:20px;font-size:0.75rem;font-weight:600;">Main Thread</span>
+                </div>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Operación sin procesamiento simultáneo. Toda la carga recae sobre el hilo principal del navegador.</p>
+                <div class="worker-visual">
+                    <div class="thread-visual main">
+                        <div class="thread-bar main" style="width:90%;"></div>
+                        <div class="thread-label" style="color:var(--red);">CPU 90%</div>
+                    </div>
+                </div>
+                <div class="worker-metrics">
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--red);">20</div>
+                        <div class="worker-metric-label">FPS Promedio</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--red);">90%</div>
+                        <div class="worker-metric-label">Uso CPU</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--red);">Baja</div>
+                        <div class="worker-metric-label">Estabilidad</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--red);">1</div>
+                        <div class="worker-metric-label">Hilo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="worker-card parallel">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h3 style="font-size:1.25rem;">Paralelo</h3>
+                    <span style="padding:0.25rem 0.75rem;background:rgba(16,185,129,0.15);color:var(--green);border-radius:20px;font-size:0.75rem;font-weight:600;">Web Workers</span>
+                </div>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Procesamiento distribuido en segundo plano. El hilo principal se libera para renderizado.</p>
+                <div class="worker-visual">
+                    <div class="thread-visual worker" style="flex:0.6;">
+                        <div class="thread-bar worker" style="width:70%;"></div>
+                        <div class="thread-label" style="color:var(--green);">Main 70%</div>
+                    </div>
+                    <div style="font-size:1.5rem;color:var(--text-muted);">+</div>
+                    <div class="thread-visual worker" style="flex:0.4;">
+                        <div class="thread-bar worker" style="width:100%;"></div>
+                        <div class="thread-label" style="color:var(--green);">Worker</div>
+                    </div>
+                </div>
+                <div class="worker-metrics">
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--green);">35</div>
+                        <div class="worker-metric-label">FPS Promedio</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--green);">70%</div>
+                        <div class="worker-metric-label">Uso CPU</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--green);">Alta</div>
+                        <div class="worker-metric-label">Estabilidad</div>
+                    </div>
+                    <div class="worker-metric">
+                        <div class="worker-metric-value" style="color:var(--green);">2</div>
+                        <div class="worker-metric-label">Hilos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="grafana" class="animate-on-scroll">
+        <div class="section-label">07 / Observabilidad</div>
+        <h2 class="section-title">Grafana + Prometheus</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Dashboard de monitoreo en tiempo real. Métricas del sistema operativo correlacionadas con indicadores internos del aplicativo.</p>
+        <div class="grafana-grid">
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">CPU Pico</div>
+                <div class="grafana-value">9.78%</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">JMeter 60 usuarios concurrentes</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark1"></canvas>
+                </div>
+            </div>
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">RAM Pico</div>
+                <div class="grafana-value">21,149 MB</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">Baseline · Juego inactivo</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark2"></canvas>
+                </div>
+            </div>
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Tráfico Red</div>
+                <div class="grafana-value">118 KB/s</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">Baseline · Recibiendo datos</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark3"></canvas>
+                </div>
+            </div>
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Carga Sistema</div>
+                <div class="grafana-value">1.00</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">Load1 promedio · Estable</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark4"></canvas>
+                </div>
+            </div>
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Tasa de Error JMeter</div>
+                <div class="grafana-value">0%</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">20 · 40 · 60 usuarios · Sin errores</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark5"></canvas>
+                </div>
+            </div>
+            <div class="grafana-card">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Tiempo Respuesta</div>
+                <div class="grafana-value">1 ms</div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);">Promedio · Localhost</div>
+                <div class="grafana-sparkline">
+                    <canvas id="spark6"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="conclusiones" class="animate-on-scroll">
+        <div class="section-label">08 / Conclusiones</div>
+        <h2 class="section-title">Hallazgos del Laboratorio</h2>
+        <p style="color:var(--text-secondary);max-width:700px;">Conclusiones fundamentales derivadas del análisis experimental.</p>
+        <div class="conclusion-grid">
+            <div class="conclusion-card">
+                <h4>🚀 CISC vs RISC</h4>
+                <p>Los equipos CISC ofrecieron mejor rendimiento bruto en escenarios de alta carga gráfica (1000 bloques), manteniendo mayor estabilidad de FPS y recuperación rápida post-Garbage Collection.</p>
+            </div>
+            <div class="conclusion-card">
+                <h4>🔋 Eficiencia Energética RISC</h4>
+                <p>Los dispositivos móviles RISC demostraron menor consumo energético y mejor eficiencia térmica. El iPhone 12 Mini destacó por optimización del chip A14 Bionic.</p>
+            </div>
+            <div class="conclusion-card">
+                <h4>⚙️ Web Workers</h4>
+                <p>La implementación de Web Workers mejoró la estabilidad del sistema: +75% en FPS (20→35) y reducción del 20% en uso de CPU (90%→70%).</p>
+            </div>
+            <div class="conclusion-card">
+                <h4>📊 Grafana + Prometheus</h4>
+                <p>El stack de observabilidad permitió monitorear en tiempo real CPU, RAM, red y carga del sistema, correlacionando métricas del SO con indicadores internos del app.</p>
+            </div>
+            <div class="conclusion-card">
+                <h4>🧠 Gestión de Memoria</h4>
+                <p>El Heap Memory aumentó progresivamente con la carga de bloques. El Garbage Collector de JavaScript liberó recursos al eliminar objetos, aunque con ligera latencia.</p>
+            </div>
+            <div class="conclusion-card">
+                <h4>🧪 JMeter — Pruebas de Carga</h4>
+                <p>El sistema mantuvo 0% de errores y 1 ms de tiempo de respuesta con hasta 60 usuarios concurrentes sobre localhost, evidenciando buena capacidad de respuesta.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="footer">
+        <p>Laboratorio de Verificación de Arquitectura Computacional · <strong>GameMemoriaVirtual</strong></p>
+        <p style="margin-top:0.5rem;font-size:0.75rem;">Universidad Cooperativa de Colombia · Ingeniería de Software · San Juan de Pasto · 2026</p>
+    </div>
+    <script>
+    // ===== PARTICLES =====
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.size = Math.random() * 2 + 1;
+            this.opacity = Math.random() * 0.5 + 0.1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(6, 182, 212, ${this.opacity})`;
+            ctx.fill();
+        }
+    }
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(6, 182, 212, ${0.1 * (1 - dist / 150)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ===== HERO COUNTERS =====
+    function animateCounter(id, target, suffix = '', duration = 2000) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let start = 0;
+        const step = timestamp => {
+            if (!start) start = timestamp;
+            const progress = Math.min((timestamp - start) / duration, 1);
+            const value = Math.floor(progress * target);
+            el.textContent = value + suffix;
+            if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+    setTimeout(() => {
+        animateCounter('hero-fps', 20);
+        animateCounter('hero-cpu', 70, '%');
+        animateCounter('hero-ram', 100);
+    }, 500);
+
+    // ===== SCROLL ANIMATIONS =====
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    // ===== CHART CONFIG =====
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // FPS Chart
+    const fpsCtx = document.getElementById('fpsChart').getContext('2d');
+    new Chart(fpsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['PC1 Inicial', 'PC1 Carga', 'PC2 Inicial', 'PC2 Carga', 'PC3 Inicial', 'PC3 Carga', 'Movil1 Inicial', 'Movil1 Carga', 'Movil2 Inicial', 'Movil2 Carga', 'Movil3 Inicial', 'Movil3 Carga'],
+            datasets: [{
+                label: 'FPS',
+                data: [60, 20, 100, 20, 59, 20, 30, 12, 30, 20, 59, 59],
+                backgroundColor: [
+                    '#3b82f6', '#ef4444', '#3b82f6', '#ef4444', '#3b82f6', '#ef4444',
+                    '#10b981', '#ef4444', '#10b981', '#ef4444', '#10b981', '#10b981'
+                ],
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+            }
+        }
+    });
+
+    // Heap Memory Chart
+    const heapCtx = document.getElementById('heapChart').getContext('2d');
+    new Chart(heapCtx, {
+        type: 'line',
+        data: {
+            labels: ['PC1 Ini', 'PC1 Carga', 'PC1 Elim', 'PC2 Ini', 'PC2 Carga', 'PC2 Elim', 'PC3 Ini', 'PC3 Carga', 'PC3 Elim'],
+            datasets: [{
+                label: 'Heap Memory (MB)',
+                data: [40, 80, 50, 38, 100, 60, 37, 83, 60],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // RAM JS Chart
+    const ramCtx = document.getElementById('ramChart').getContext('2d');
+    new Chart(ramCtx, {
+        type: 'line',
+        data: {
+            labels: ['PC1 Ini', 'PC1 Carga', 'PC1 Elim', 'PC2 Ini', 'PC2 Carga', 'PC2 Elim', 'PC3 Ini', 'PC3 Carga', 'PC3 Elim'],
+            datasets: [{
+                label: 'RAM JS (MB)',
+                data: [50, 76, 55, 37, 90, 40, 38, 90, 60],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#10b981',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // RISC vs CISC Chart
+    const riscCtx = document.getElementById('riscCiscChart').getContext('2d');
+    new Chart(riscCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Estado Inicial', 'Carga Máxima', 'Post-Eliminación'],
+            datasets: [
+                { label: 'CISC Promedio', data: [73, 20, 71.6], backgroundColor: '#3b82f6', borderRadius: 8 },
+                { label: 'RISC Promedio', data: [39.3, 30.3, 38], backgroundColor: '#10b981', borderRadius: 8 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8' } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+
+    // Sparklines
+    function createSparkline(id, data, color) {
+        const c = document.getElementById(id);
+        if (!c) return;
+        new Chart(c, {
+            type: 'line',
+            data: {
+                labels: ['1', '2', '3', '4', '5', '6', '7'],
+                datasets: [{
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color.replace(')', ', 0.1)').replace('rgb', 'rgba'),
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    }
+    createSparkline('spark1', [5, 6, 7, 8, 9, 9.5, 9.78], 'rgb(168, 85, 247)');
+    createSparkline('spark2', [18000, 19000, 20000, 20500, 21000, 21149, 21000], 'rgb(59, 130, 246)');
+    createSparkline('spark3', [50, 80, 100, 110, 115, 118, 120], 'rgb(6, 182, 212)');
+    createSparkline('spark4', [0.8, 0.9, 1.0, 1.1, 1.0, 0.9, 1.0], 'rgb(249, 115, 22)');
+    createSparkline('spark5', [0, 0, 0, 0, 0, 0, 0], 'rgb(16, 185, 129)');
+    createSparkline('spark6', [1, 1, 1, 1, 1, 1, 1], 'rgb(10, 190, 130)');
+    </script>
+</body>
+</html>
+</html>
