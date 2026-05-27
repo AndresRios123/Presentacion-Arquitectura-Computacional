@@ -711,13 +711,13 @@
                             <div class="device-specs">680 Octa-Core · 8 GB RAM · Android 12</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:1.1rem;font-weight:700;color:var(--green);">59 FPS</div>
+                            <div style="font-size:1.1rem;font-weight:700;color:var(--green);">24 FPS</div>
                             <div class="device-specs">Estado inicial</div>
                         </div>
                     </div>
                 </div>
                 <div style="margin-top:1.5rem;padding:1rem;background:rgba(16,185,129,0.05);border-radius:12px;border:1px solid rgba(16,185,129,0.2);">
-                    <div style="font-size:0.85rem;color:var(--text-secondary);">Bajo carga: caída pronunciada. iPhone 12 Mini mejor estabilidad (optimización A14). Oppo A78 destaca con 8 GB RAM. <strong style="color:var(--green);">Mejor eficiencia energética</strong>.</div>
+                    <div style="font-size:0.85rem;color:var(--text-secondary);">iPhone 12 Mini mantuvo mejor rendimiento gráfico bruto (30→20 FPS) gracias al chip A14 Bionic. Oppo A78 con 8 GB de RAM mostró estabilidad de memoria pero su GPU Adreno 610 degradó de 24 a 10 FPS bajo carga, evidenciando limitaciones en renderizado 3D exigente.</div>
                 </div>
             </div>
         </div>
@@ -988,10 +988,10 @@
             labels: ['Compumax Inicial', 'Compumax Carga', 'Mesa Inicial', 'Mesa Carga', 'HP Inicial', 'HP Carga', 'Moto G60s Inicial', 'Moto G60s Carga', 'iPhone 12 Inicial', 'iPhone 12 Carga', 'Oppo A78 Inicial', 'Oppo A78 Carga'],
             datasets: [{
                 label: 'FPS',
-                data: [60, 20, 100, 20, 59, 20, 30, 12, 30, 20, 59, 59],
+                data: [60, 20, 100, 20, 59, 20, 30, 12, 30, 20, 24, 10],
                 backgroundColor: [
                     '#3b82f6', '#ef4444', '#3b82f6', '#ef4444', '#3b82f6', '#ef4444',
-                    '#10b981', '#ef4444', '#10b981', '#ef4444', '#10b981', '#10b981'
+                    '#10b981', '#ef4444', '#10b981', '#ef4444', '#10b981', '#ef4444'
                 ],
                 borderRadius: 8,
                 borderSkipped: false
