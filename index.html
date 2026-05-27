@@ -156,26 +156,114 @@
             border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 20px;
             font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--cyan);
         }
-        .architecture-flow { display: flex; flex-direction: column; gap: 0; margin-top: 3rem; position: relative; }
-        .arch-step {
-            display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem 2rem;
-            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px;
-            backdrop-filter: blur(10px); transition: all 0.3s; position: relative;
+        /* ===== DIAGRAMA DE ARQUITECTURA ===== */
+        .arch-diagram {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+            position: relative;
         }
-        .arch-step:hover { border-color: rgba(6, 182, 212, 0.3); box-shadow: 0 0 30px rgba(6, 182, 212, 0.1); }
-        .arch-arrow { display: flex; justify-content: center; padding: 0.5rem; color: var(--cyan); font-size: 1.5rem; }
-        .arch-icon {
-            width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+        .arch-layer {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
         }
-        .arch-icon.react { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
-        .arch-icon.worker { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .arch-icon.prometheus { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
-        .arch-icon.grafana { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); }
-        .arch-icon.jmeter { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
-        .arch-icon.user { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
-        .arch-content h4 { font-size: 1.1rem; margin-bottom: 0.25rem; }
-        .arch-content p { font-size: 0.85rem; color: var(--text-secondary); }
+        .arch-layer.full-width {
+            grid-column: 1 / -1;
+        }
+        .arch-layer-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .arch-layer-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .arch-layer-badge.app { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .arch-layer-badge.monitoring { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
+        .arch-layer-badge.test { background: rgba(6, 182, 212, 0.15); color: var(--cyan); }
+        .arch-components {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .arch-component {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 140px;
+        }
+        .arch-component:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-2px);
+        }
+        .arch-comp-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+        .arch-comp-icon.react { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .arch-comp-icon.worker { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .arch-comp-icon.prometheus { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
+        .arch-comp-icon.grafana { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .arch-comp-icon.jmeter { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .arch-comp-icon.exporter { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .arch-comp-info h4 { font-size: 0.9rem; margin-bottom: 0.15rem; }
+        .arch-comp-info p { font-size: 0.7rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .arch-connector {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .arch-connector-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: 0.4;
+        }
+        .arch-data-flow {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .data-flow-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .data-flow-arrow {
+            color: var(--cyan);
+            font-size: 1.2rem;
+        }
         .method-timeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-top: 3rem; }
         .method-step {
             background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px;
@@ -272,7 +360,9 @@
             .workers-comparison { grid-template-columns: 1fr; }
             .grafana-grid { grid-template-columns: 1fr; }
             .conclusion-grid { grid-template-columns: 1fr; }
-            .arch-step { flex-direction: column; text-align: center; }
+            .arch-diagram { grid-template-columns: 1fr; }
+            .arch-components { flex-direction: column; }
+            .arch-data-flow { flex-direction: column; align-items: center; }
         }
         @media (max-width: 640px) {
             .hero-title { font-size: 2rem; }
@@ -366,53 +456,101 @@
     <section id="arquitectura" class="animate-on-scroll">
         <div class="section-label">02 / Arquitectura</div>
         <h2 class="section-title">Arquitectura del Sistema</h2>
-        <p style="color:var(--text-secondary);max-width:700px;">Flujo de datos desde el usuario hasta el monitoreo en tiempo real. Stack moderno de observabilidad.</p>
-        <div class="architecture-flow">
-            <div class="arch-step">
-                <div class="arch-icon user">👤</div>
-                <div class="arch-content">
-                    <h4>Usuario</h4>
-                    <p>Interacción con la aplicación 3D</p>
+        <p style="color:var(--text-secondary);max-width:700px;">Infraestructura técnica y flujo de datos entre componentes. Stack de observabilidad integrado.</p>
+        <div class="arch-diagram">
+            <!-- Capa Aplicación -->
+            <div class="arch-layer">
+                <div class="arch-layer-header">
+                    <div class="arch-layer-badge app">Aplicación</div>
+                    <span style="font-size:0.8rem;color:var(--text-muted);">Frontend + Paralelismo</span>
+                </div>
+                <div class="arch-components">
+                    <div class="arch-component">
+                        <div class="arch-comp-icon react">⚛️</div>
+                        <div class="arch-comp-info">
+                            <h4>React + Three.js</h4>
+                            <p>Vite · localhost:5173</p>
+                        </div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="arch-comp-icon worker">⚙️</div>
+                        <div class="arch-comp-info">
+                            <h4>Web Workers</h4>
+                            <p>Paralelismo JS</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-data-flow">
+                    <div class="data-flow-item">Navegador <span class="data-flow-arrow">→</span> Canvas WebGL</div>
+                    <div class="data-flow-item">Main Thread <span class="data-flow-arrow">→</span> Worker Thread</div>
                 </div>
             </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-step">
-                <div class="arch-icon react">⚛️</div>
-                <div class="arch-content">
-                    <h4>React + Three.js (Vite)</h4>
-                    <p>Entorno 3D interactivo · Renderizado WebGL</p>
+            <!-- Capa Monitoreo -->
+            <div class="arch-layer">
+                <div class="arch-layer-header">
+                    <div class="arch-layer-badge monitoring">Observabilidad</div>
+                    <span style="font-size:0.8rem;color:var(--text-muted);">Recolección + Visualización</span>
+                </div>
+                <div class="arch-components">
+                    <div class="arch-component">
+                        <div class="arch-comp-icon exporter">📡</div>
+                        <div class="arch-comp-info">
+                            <h4>Node Exporter</h4>
+                            <p>Puerto 9100</p>
+                        </div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="arch-comp-icon prometheus">🔥</div>
+                        <div class="arch-comp-info">
+                            <h4>Prometheus</h4>
+                            <p>Puerto 9090</p>
+                        </div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="arch-comp-icon grafana">📈</div>
+                        <div class="arch-comp-info">
+                            <h4>Grafana</h4>
+                            <p>Puerto 3000</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-data-flow">
+                    <div class="data-flow-item">Node Exporter <span class="data-flow-arrow">→</span> Prometheus</div>
+                    <div class="data-flow-arrow">→</div>
+                    <div class="data-flow-item">Grafana Dashboards</div>
                 </div>
             </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-step">
-                <div class="arch-icon worker">⚙️</div>
-                <div class="arch-content">
-                    <h4>Web Workers</h4>
-                    <p>Computación paralela en segundo plano</p>
-                </div>
+            <!-- Conector -->
+            <div class="arch-connector">
+                <div class="arch-connector-line"></div>
+                <span style="color:var(--cyan);white-space:nowrap;">HTTP Scraping · Métricas del SO</span>
+                <div class="arch-connector-line"></div>
             </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-step">
-                <div class="arch-icon prometheus">📡</div>
-                <div class="arch-content">
-                    <h4>Prometheus + Node Exporter</h4>
-                    <p>Scraping de métricas del sistema operativo</p>
+            <!-- Capa Testing -->
+            <div class="arch-layer full-width">
+                <div class="arch-layer-header">
+                    <div class="arch-layer-badge test">Pruebas de Carga</div>
+                    <span style="font-size:0.8rem;color:var(--text-muted);">Validación de rendimiento bajo concurrencia</span>
                 </div>
-            </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-step">
-                <div class="arch-icon grafana">📈</div>
-                <div class="arch-content">
-                    <h4>Grafana</h4>
-                    <p>Visualización de dashboards en tiempo real</p>
-                </div>
-            </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-step">
-                <div class="arch-icon jmeter">🧪</div>
-                <div class="arch-content">
-                    <h4>Apache JMeter</h4>
-                    <p>Pruebas de carga HTTP sobre localhost:5173</p>
+                <div class="arch-components">
+                    <div class="arch-component">
+                        <div class="arch-comp-icon jmeter">🧪</div>
+                        <div class="arch-comp-info">
+                            <h4>Apache JMeter</h4>
+                            <p>Plan de pruebas HTTP</p>
+                        </div>
+                    </div>
+                    <div class="arch-component" style="flex:2;justify-content:center;">
+                        <div class="data-flow-item" style="font-size:1rem;">
+                            <span style="color:var(--cyan);font-weight:600;">20</span> usuarios
+                            <span class="data-flow-arrow">→</span>
+                            <span style="color:var(--cyan);font-weight:600;">40</span> usuarios
+                            <span class="data-flow-arrow">→</span>
+                            <span style="color:var(--cyan);font-weight:600;">60</span> usuarios
+                            <span class="data-flow-arrow">→</span>
+                            <span style="color:var(--text-primary);font-weight:600;">localhost:5173</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
